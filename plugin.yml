@@ -3,7 +3,7 @@ author: Amitron
 api: Spigot
 api-version: "1.13"
 version: "1.0"
-main: net.amitron.lumerya.tombes
+main: net.amitron.lumerya.Tombes
 commands:
   tombstone:
     description: Admin tombstones command
