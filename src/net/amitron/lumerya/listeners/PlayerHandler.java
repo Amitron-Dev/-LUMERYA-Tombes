@@ -27,6 +27,7 @@ public class PlayerHandler implements Listener {
     
     @EventHandler
     public void onDeath(PlayerDeathEvent e) {
+        e.getDrops().clear();
         Player p = e.getEntity();
         Location loc = p.getLocation().clone().add(0, -1, 0);
         Block block = loc.getBlock();
