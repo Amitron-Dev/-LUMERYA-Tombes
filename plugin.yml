@@ -1,0 +1,9 @@
+name: LumeryaTombe
+author: Amitron
+api: Spigot
+api-version: "1.13"
+version: "1.0"
+main: net.amitron.lumerya.tombes
+commands:
+  tombstone:
+    description: Admin tombstones command
