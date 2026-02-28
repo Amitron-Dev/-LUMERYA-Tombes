@@ -109,6 +109,24 @@ public class Tombes extends JavaPlugin {
 	    }
 	}
 	
+	public GraveData getGraveDataByPlayerUUID(String uuid) {
+	    try (FileReader reader = new FileReader(gravesFile)) {
+	        Gson gson = new Gson();
+	        Type type = new TypeToken<List<GraveData>>() {}.getType();
+	        List<GraveData> graves = gson.fromJson(reader, type);
+	        if (graves == null) return null;
+
+	        for (GraveData gd : graves) {
+	            if (uuid.equals(gd.owner)) {
+	                return gd;
+	            }
+	        }
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
+	    return null;
+	}
+	
 	public void loadGraves() {
 	    try (FileReader reader = new FileReader(gravesFile)) {
 	        Gson gson = new Gson();

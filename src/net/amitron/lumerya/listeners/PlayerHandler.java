@@ -1,5 +1,7 @@
 package net.amitron.lumerya.listeners;
 
+import java.util.List;
+
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -14,9 +16,11 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 
+import net.amitron.lumerya.GraveData;
 import net.amitron.lumerya.Tombes;
 
 public class PlayerHandler implements Listener {
@@ -34,12 +38,12 @@ public class PlayerHandler implements Listener {
         if (p.getLastDamageCause() instanceof EntityDamageByEntityEvent) {
             EntityDamageByEntityEvent evt = (EntityDamageByEntityEvent) p.getLastDamageCause();
             if (evt.getDamager() instanceof Player) {
-                // PvP → drop normal
+                // Pvp
                 return;
             }
         }
 
-        // Toutes les autres morts → spawn tombe
+        // Other death
         String graveId = main.saveStuff(p.getName(), e.getDrops());
         e.getDrops().clear();
 
@@ -54,6 +58,8 @@ public class PlayerHandler implements Listener {
             graveId
         );
         skull.update();
+        
+        
     }
     
     @EventHandler
@@ -67,7 +73,7 @@ public class PlayerHandler implements Listener {
                 new NamespacedKey(main, "graveId"),
                 PersistentDataType.STRING
             );
-            return graveId != null; // true = protège la tête, false = laisse détruire
+            return graveId != null;
         });
     }
 
@@ -85,6 +91,7 @@ public class PlayerHandler implements Listener {
             return graveId != null;
         });
     }
+    
     
     @EventHandler
     public void onBreak(PlayerInteractEvent e) {
@@ -126,5 +133,22 @@ public class PlayerHandler implements Listener {
 
         main.removeGrave(graveId);
         block.setType(Material.AIR);
+    }
+    
+    @EventHandler
+    public void onRespawn(PlayerRespawnEvent e) {
+        Player p = e.getPlayer();
+        List<ItemStack> graves = main.getStuff(p.getUniqueId().toString());
+
+        if (graves != null && !graves.isEmpty()) {
+            GraveData gd = main.getGraveDataByPlayerUUID(p.getUniqueId().toString());
+            if (gd != null) {
+                p.sendMessage("§eVous avez une tombe à l'endroit de votre mort.");
+            } else {
+                p.sendMessage("§eVous avez une tombe mais elle n'a pas pu être localisée.");
+            }
+        } else {
+            p.sendMessage("§cVous avez été tué par un joueur, aucune tombe n'a été posée.");
+        }
     }
 }
