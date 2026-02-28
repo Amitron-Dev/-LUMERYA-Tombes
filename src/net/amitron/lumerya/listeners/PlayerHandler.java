@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Block;
 import org.bukkit.block.Skull;
@@ -14,6 +15,7 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataType;
 
 import net.amitron.lumerya.Tombes;
 
@@ -27,19 +29,22 @@ public class PlayerHandler implements Listener {
     
     @EventHandler
     public void onDeath(PlayerDeathEvent e) {
-    	main.saveStuff(e.getEntity().getName(), e.getDrops());
-    	e.getDrops().clear();
-    	
-        e.getDrops().clear();
         Player p = e.getEntity();
-        Location loc = p.getLocation();
-        Block block = loc.getBlock();
+
+        String graveId = main.saveStuff(p.getName(), e.getDrops());
+        e.getDrops().clear();
+
+        Block block = p.getLocation().getBlock();
         block.setType(Material.PLAYER_HEAD);
-        if (block.getState() instanceof Skull) {
-            Skull skullBlock = (Skull) block.getState();
-            skullBlock.setOwningPlayer(p);
-            skullBlock.update();
-        }
+
+        Skull skull = (Skull) block.getState();
+        skull.setOwningPlayer(p);
+        skull.getPersistentDataContainer().set(
+            new NamespacedKey(main, "graveId"),
+            PersistentDataType.STRING,
+            graveId
+        );
+        skull.update();
     }
     
     @EventHandler
@@ -47,19 +52,20 @@ public class PlayerHandler implements Listener {
         if (e.getClickedBlock() == null) return;
         Block block = e.getClickedBlock();
         if (block.getType() != Material.PLAYER_HEAD) return;
-        Action action = e.getAction();
-        if (action != Action.RIGHT_CLICK_BLOCK && action != Action.LEFT_CLICK_BLOCK) return;
-        if (!(block.getState() instanceof Skull)) return;
-        Skull skullBlock = (Skull) block.getState();
-        OfflinePlayer owner = skullBlock.getOwningPlayer();
-        if (owner == null) return;
+
+        Skull skull = (Skull) block.getState();
+        String graveId = skull.getPersistentDataContainer().get(
+            new NamespacedKey(main, "graveId"),
+            PersistentDataType.STRING
+        );
+        if (graveId == null) return;
+
         Location loc = block.getLocation();
-        List<ItemStack> stuff = main.getStuff(owner.getName());
-        if (stuff != null) {
-            for (ItemStack item : stuff) {
-                loc.getWorld().dropItemNaturally(loc, item);
-            }
+        for (ItemStack item : main.getStuffByGraveId(graveId)) {
+            loc.getWorld().dropItemNaturally(loc, item);
         }
+
+        main.removeGrave(graveId);
         block.setType(Material.AIR);
     }
 }

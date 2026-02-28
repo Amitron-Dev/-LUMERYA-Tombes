@@ -35,32 +35,35 @@ public class Tombes extends JavaPlugin {
 		
 	}
 	
+	
 	public List<ItemStack> getStuff(String playerName) {
+	    List<ItemStack> result = new ArrayList<>();
+	    
 	    try (FileReader reader = new FileReader(stuffFile)) {
 	        Gson gson = new Gson();
 	        Type type = new TypeToken<List<SerializedItem>>() {}.getType();
+	        
+	        
 	        List<SerializedItem> allStuff = gson.fromJson(reader, type);
-
-	        List<ItemStack> playerStuff = new ArrayList<>();
-	        if (allStuff == null) return playerStuff;
+	        if (allStuff == null) return result;
 
 	        for (SerializedItem si : allStuff) {
 	            if (si.player.equalsIgnoreCase(playerName)) {
-	                playerStuff.add(si.toItemStack());
+	                result.add(SerializedItem.deserialize(si.itemBase64));
 	            }
 	        }
-	        return playerStuff;
-	    } catch (Exception ex) {
-	        ex.printStackTrace();
-	        return new ArrayList<>();
+	    } catch (Exception e) {
+	        e.printStackTrace();
 	    }
+	    return result;
 	}
 	
-	public void saveStuff(String playerName, List<ItemStack> drops) {
+	
+	
+	public String saveStuff(String playerName, List<ItemStack> drops) {
 	    try {
 	        Gson gson = new Gson();
 	        Type type = new TypeToken<List<SerializedItem>>() {}.getType();
-
 	        List<SerializedItem> allStuff = new ArrayList<>();
 
 	        if (stuffFile.exists() && stuffFile.length() > 0) {
@@ -70,14 +73,64 @@ public class Tombes extends JavaPlugin {
 	            }
 	        }
 
+	        String graveId = java.util.UUID.randomUUID().toString();
+
 	        for (ItemStack item : drops) {
 	            if (item == null || item.getType() == Material.AIR) continue;
 
 	            SerializedItem si = new SerializedItem();
+	            si.graveId = graveId;
 	            si.player = playerName;
-	            si.type = item.getType().name();
-	            si.amount = item.getAmount();
+	            si.itemBase64 = SerializedItem.serialize(item);
 	            allStuff.add(si);
+	        }
+
+	        try (FileWriter writer = new FileWriter(stuffFile, false)) {
+	            gson.toJson(allStuff, writer);
+	        }
+
+	        return graveId;
+
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return null;
+	    }
+	}
+	
+	public List<ItemStack> getStuffByGraveId(String graveId) {
+	    List<ItemStack> result = new ArrayList<>();
+	    try (FileReader reader = new FileReader(stuffFile)) {
+	        Gson gson = new Gson();
+	        Type type = new TypeToken<List<SerializedItem>>() {}.getType();
+	        List<SerializedItem> allStuff = gson.fromJson(reader, type);
+	        if (allStuff == null) return result;
+
+	        for (SerializedItem si : allStuff) {
+	            if (graveId.equals(si.graveId)) {
+	                result.add(SerializedItem.deserialize(si.itemBase64));
+	            }
+	        }
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
+	    return result;
+	}
+	
+	public void removeGrave(String graveId) {
+	    try {
+	        Gson gson = new Gson();
+	        Type type = new TypeToken<List<SerializedItem>>() {}.getType();
+
+	        List<SerializedItem> allStuff = new ArrayList<>();
+	        try (FileReader reader = new FileReader(stuffFile)) {
+	            List<SerializedItem> existing = gson.fromJson(reader, type);
+	            if (existing != null) {
+	                for (SerializedItem si : existing) {
+	                    if (!graveId.equals(si.graveId)) {
+	                        allStuff.add(si);
+	                    }
+	                }
+	            }
 	        }
 
 	        try (FileWriter writer = new FileWriter(stuffFile, false)) {
