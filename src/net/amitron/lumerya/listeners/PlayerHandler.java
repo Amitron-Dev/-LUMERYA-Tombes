@@ -9,7 +9,9 @@ import org.bukkit.block.Skull;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
@@ -52,6 +54,36 @@ public class PlayerHandler implements Listener {
             graveId
         );
         skull.update();
+    }
+    
+    @EventHandler
+    public void onEntityExplosion(EntityExplodeEvent e) {
+        e.blockList().removeIf(block -> {
+            if (block.getType() != Material.PLAYER_HEAD) return false;
+            if (!(block.getState() instanceof Skull)) return false;
+
+            Skull skull = (Skull) block.getState();
+            String graveId = skull.getPersistentDataContainer().get(
+                new NamespacedKey(main, "graveId"),
+                PersistentDataType.STRING
+            );
+            return graveId != null; // true = protège la tête, false = laisse détruire
+        });
+    }
+
+    @EventHandler
+    public void onBlockExplosion(BlockExplodeEvent e) {
+        e.blockList().removeIf(block -> {
+            if (block.getType() != Material.PLAYER_HEAD) return false;
+            if (!(block.getState() instanceof Skull)) return false;
+
+            Skull skull = (Skull) block.getState();
+            String graveId = skull.getPersistentDataContainer().get(
+                new NamespacedKey(main, "graveId"),
+                PersistentDataType.STRING
+            );
+            return graveId != null;
+        });
     }
     
     @EventHandler
