@@ -27,9 +27,12 @@ public class PlayerHandler implements Listener {
     
     @EventHandler
     public void onDeath(PlayerDeathEvent e) {
+    	main.saveStuff(e.getEntity().getName(), e.getDrops());
+    	e.getDrops().clear();
+    	
         e.getDrops().clear();
         Player p = e.getEntity();
-        Location loc = p.getLocation().clone().add(0, -1, 0);
+        Location loc = p.getLocation();
         Block block = loc.getBlock();
         block.setType(Material.PLAYER_HEAD);
         if (block.getState() instanceof Skull) {
