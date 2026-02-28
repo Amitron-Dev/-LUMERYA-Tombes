@@ -9,6 +9,7 @@ import org.bukkit.block.Skull;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
@@ -28,6 +29,15 @@ public class PlayerHandler implements Listener {
     public void onDeath(PlayerDeathEvent e) {
         Player p = e.getEntity();
 
+        if (p.getLastDamageCause() instanceof EntityDamageByEntityEvent) {
+            EntityDamageByEntityEvent evt = (EntityDamageByEntityEvent) p.getLastDamageCause();
+            if (evt.getDamager() instanceof Player) {
+                // PvP → drop normal
+                return;
+            }
+        }
+
+        // Toutes les autres morts → spawn tombe
         String graveId = main.saveStuff(p.getName(), e.getDrops());
         e.getDrops().clear();
 
