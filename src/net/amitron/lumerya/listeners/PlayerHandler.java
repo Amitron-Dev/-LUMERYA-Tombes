@@ -138,17 +138,7 @@ public class PlayerHandler implements Listener {
     @EventHandler
     public void onRespawn(PlayerRespawnEvent e) {
         Player p = e.getPlayer();
-        List<ItemStack> graves = main.getStuff(p.getUniqueId().toString());
 
-        if (graves != null && !graves.isEmpty()) {
-            GraveData gd = main.getGraveDataByPlayerUUID(p.getUniqueId().toString());
-            if (gd != null) {
-                p.sendMessage("§eVous avez une tombe à l'endroit de votre mort.");
-            } else {
-                p.sendMessage("§eVous avez une tombe mais elle n'a pas pu être localisée.");
-            }
-        } else {
-            p.sendMessage("§cVous avez été tué par un joueur, aucune tombe n'a été posée.");
-        }
+        p.sendMessage("§cSi vous êtes mort d'autre raison que d'un coup d'un joueur (pvp), une tombe a été posée au coordonnées de votre mort.");
     }
 }
